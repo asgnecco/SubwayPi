@@ -25,14 +25,19 @@ try:
     while True:
         try:
             feed = NYCTFeed(FEED_LINE)
-            trains = feed.filter_trips(stop_id=TARGET_STOP, underway=True)
             
             is_train_in_station_now = False
             
-            for train in trains:
+            # Manually loop through all live trips in the feed
+            for train in feed.trips:
+                # If the train isn't moving or doesn't have a status, skip it
+                if not train.underway or not train.current_status:
+                    continue
+                    
                 status = train.current_status
                 current_stop = train.current_stop_id
                 
+                # Check if it matches our exact target stop and status
                 if status == "STOPPED_AT" and current_stop == TARGET_STOP:
                     is_train_in_station_now = True
                     break
