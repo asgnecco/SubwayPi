@@ -54,6 +54,9 @@ try:
                 current_stop = current_update.stop_id                         # e.g., '117S'
                 status = getattr(train, 'current_status', None)      # e.g., 'STOPPED_AT'
                 
+                # Debug print to see what data is being returned
+                print(f"DEBUG: Train at {current_stop}, Status: {status}")
+                
                 # Check if it matches our downtown 137th St target and is physically stopped
                 if current_stop == TARGET_STOP and status == "STOPPED_AT":
                     is_train_in_station_now = True
