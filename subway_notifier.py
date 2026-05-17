@@ -57,8 +57,9 @@ try:
                 # Debug print to see what data is being returned
                 print(f"DEBUG: Train at {current_stop}, Status: {status}")
                 
-                # Check if it matches our downtown 137th St target and is physically stopped
-                if current_stop == TARGET_STOP and status == "STOPPED_AT":
+                # Check if it matches our downtown 137th St target
+                # Since status is returning None, we assume being the first upcoming stop means it's arriving/at the station
+                if current_stop == TARGET_STOP:
                     is_train_in_station_now = True
                     break # Found it! No need to check other trains during this specific loop cycle
             
