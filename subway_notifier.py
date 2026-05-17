@@ -41,12 +41,23 @@ try:
             feed = NYCTFeed(FEED_LINE)
             
             is_train_in_station_now = False
+            upcoming_arrivals = []
             
             # Look through all active trips currently on the line
             for train in feed.trips:
                 # If the train has no upcoming stop data, skip it
                 if not train.stop_time_updates:
                     continue
+                
+                # Collect arrivals for ETA display
+                for update in train.stop_time_updates:
+                    if update.stop_id == TARGET_STOP:
+                        arrival_time = getattr(update, 'arrival', None)
+                        if arrival_time:
+                            now = datetime.datetime.now(arrival_time.tzinfo) if arrival_time.tzinfo else datetime.datetime.now()
+                            time_diff = (arrival_time - now).total_seconds()
+                            if time_diff > 0:
+                                upcoming_arrivals.append(time_diff)
                 
                 # The first update in the list represents the train's CURRENT active stop
                 current_update = train.stop_time_updates[0]
@@ -63,19 +74,19 @@ try:
                     now = datetime.datetime.now(arrival_time.tzinfo) if arrival_time.tzinfo else datetime.datetime.now()
                     time_diff = (arrival_time - now).total_seconds()
                     
-                    # Debug print
-                    print(f"DEBUG: Train at {current_stop}, Arrival in {time_diff} seconds, Status: {status}")
-                    
                     # Only consider it "in station" if it's arriving within 60 seconds (or already there)
                     if time_diff > 60:
                         is_close = False
-                else:
-                    print(f"DEBUG: Train at {current_stop}, Status: {status} (No arrival time)")
                 
                 # Check if it matches our downtown 137th St target and is close enough
                 if current_stop == TARGET_STOP and is_close:
                     is_train_in_station_now = True
                     break # Found it! No need to check other trains during this specific loop cycle
+            
+            # Sort arrivals to find the next trains
+            upcoming_arrivals.sort()
+            etas = [f"{int(diff // 60)}m" for diff in upcoming_arrivals[:2]]
+            eta_str = " & ".join(etas) if etas else "No incoming trains"
             
             # --- State Transition Logic ---
             
@@ -90,11 +101,11 @@ try:
                 departure_sound.play()
                 
             else:
-                # Idle reporting just to let you know the script is alive
+                # Idle reporting with ETA
                 if is_train_in_station_now:
-                    print(f"[{time.strftime('%X')}] Train is still stopped at the platform...")
+                    print(f"[{time.strftime('%X')}] Train in station. Next: {eta_str}")
                 else:
-                    print(f"[{time.strftime('%X')}] Station is currently empty.")
+                    print(f"[{time.strftime('%X')}] Station empty. Next: {eta_str}")
 
             # Update our tracker for the next loop evaluation
             was_train_in_station = is_train_in_station_now
