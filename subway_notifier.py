@@ -7,8 +7,8 @@ from nyct_gtfs import NYCTFeed
 # ==========================================
 mixer.init()
 try:
-    arrival_sound = mixer.Sound("arrival.mp3")
-    departure_sound = mixer.Sound("departure.mp3")
+    arrival_sound = mixer.Sound("ArrivalLong.mp3")
+    departure_sound = mixer.Sound("Departure.mp3")
     print("Audio files loaded successfully.")
 except Exception as e:
     print(f"Error loading audio files: {e}")
