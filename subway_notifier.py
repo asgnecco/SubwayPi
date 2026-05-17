@@ -62,9 +62,8 @@ try:
                 # The first update in the list represents the train's CURRENT active stop
                 current_update = train.stop_time_updates[0]
                 
-                # Extract the stop ID and the train's real-time status at that stop
+                # Extract the stop ID
                 current_stop = current_update.stop_id                         # e.g., '115S'
-                status = getattr(train, 'current_status', None)      # e.g., 'STOPPED_AT'
                 
                 # Check arrival time to avoid triggering too early
                 arrival_time = getattr(current_update, 'arrival', None)
@@ -85,8 +84,10 @@ try:
             
             # Sort arrivals to find the next trains
             upcoming_arrivals.sort()
-            etas = [f"{int(diff // 60)}m" for diff in upcoming_arrivals[:2]]
-            eta_str = " & ".join(etas) if etas else "No incoming trains"
+            
+            # Format ETAs (only future arrivals)
+            etas = [f"{int(diff // 60)}m" for diff in upcoming_arrivals]
+            eta_str = " & ".join(etas[:2]) if etas else "No incoming trains"
             
             # --- State Transition Logic ---
             
