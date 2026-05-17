@@ -52,7 +52,7 @@ try:
                 
                 # Extract the stop ID and the train's real-time status at that stop
                 current_stop = current_update.stop_id                         # e.g., '117S'
-                status = getattr(current_update, 'current_status', None)      # e.g., 'STOPPED_AT'
+                status = getattr(train, 'current_status', None)      # e.g., 'STOPPED_AT'
                 
                 # Check if it matches our downtown 137th St target and is physically stopped
                 if current_stop == TARGET_STOP and status == "STOPPED_AT":
