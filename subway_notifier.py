@@ -1,4 +1,5 @@
 import time
+import datetime
 from pygame import mixer
 from nyct_gtfs import NYCTFeed
 
@@ -20,8 +21,8 @@ except Exception as e:
 # ==========================================
 # "1" loads the feed containing the 1, 2, 3, 4, 5, 6 lines
 FEED_LINE = "1"
-# '117' is 137 St-City College. 'S' stands for Southbound (Downtown).
-TARGET_STOP = "117S"  
+# '115' is 137 St-City College. 'S' stands for Southbound (Downtown).
+TARGET_STOP = "115S"  
 
 # State tracking variable to detect when a train arrives or leaves
 was_train_in_station = False
@@ -51,15 +52,28 @@ try:
                 current_update = train.stop_time_updates[0]
                 
                 # Extract the stop ID and the train's real-time status at that stop
-                current_stop = current_update.stop_id                         # e.g., '117S'
+                current_stop = current_update.stop_id                         # e.g., '115S'
                 status = getattr(train, 'current_status', None)      # e.g., 'STOPPED_AT'
                 
-                # Debug print to see what data is being returned
-                print(f"DEBUG: Train at {current_stop}, Status: {status}")
+                # Check arrival time to avoid triggering too early
+                arrival_time = getattr(current_update, 'arrival', None)
+                is_close = True
                 
-                # Check if it matches our downtown 137th St target
-                # Since status is returning None, we assume being the first upcoming stop means it's arriving/at the station
-                if current_stop == TARGET_STOP:
+                if arrival_time:
+                    now = datetime.datetime.now(arrival_time.tzinfo) if arrival_time.tzinfo else datetime.datetime.now()
+                    time_diff = (arrival_time - now).total_seconds()
+                    
+                    # Debug print
+                    print(f"DEBUG: Train at {current_stop}, Arrival in {time_diff} seconds, Status: {status}")
+                    
+                    # Only consider it "in station" if it's arriving within 60 seconds (or already there)
+                    if time_diff > 60:
+                        is_close = False
+                else:
+                    print(f"DEBUG: Train at {current_stop}, Status: {status} (No arrival time)")
+                
+                # Check if it matches our downtown 137th St target and is close enough
+                if current_stop == TARGET_STOP and is_close:
                     is_train_in_station_now = True
                     break # Found it! No need to check other trains during this specific loop cycle
             
